@@ -1,52 +1,24 @@
-package com.example.greetingcard
+class SmartTvDevice(deviceName: String, deviceCategory: String) :
+    SmartDevice(name = deviceName, category = deviceCategory) {
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import com.example.greetingcard.ui.theme.GreetingCardTheme
-
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            GreetingCardTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+    var speakerVolume = 2
+        set(value) {
+            if (value in 0..100) {
+                field = value
             }
         }
-    }
+
+    var channelNumber = 1
+        set(value) {
+            if (value in 0..200) {
+                field = value
+            }
+        }
+
+
 }
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) { 
-    Surface(color = Color.Blue){
-        Text(
-            text = "Hi, my name is $name!",
-            modifier = Modifier.padding(24.dp)
-        )
-    }
-}
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    GreetingCardTheme {
-        Greeting("Otabek")
-    }
+open class SmartDevice(val name: String, val category: String) {
+    ...
 }
