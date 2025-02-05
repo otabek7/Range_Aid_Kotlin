@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "218107101024",
+    "project_id": "greeting-card-f903e",
+    "storage_bucket": "greeting-card-f903e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:218107101024:android:6a88ceeb1f00c541c7a805",
+        "android_client_info": {
+          "package_name": "com.example.greetingcard"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCis9VvvLVCug1wqtlVP_Af7LDnWECV2Vs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
