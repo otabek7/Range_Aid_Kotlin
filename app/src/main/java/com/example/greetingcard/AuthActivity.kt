@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -15,6 +16,14 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.TextStyle
+
+
 
 class AuthActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
@@ -49,8 +58,13 @@ fun AuthScreen(onLoginSuccess: () -> Unit) {
         }
     }
 
+    val gradient = Brush.linearGradient(
+        colors = listOf(Color(0xFF800000), Color(0xFF000000)) // Light blue to green
+    )
+
+
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().background(gradient),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -58,13 +72,19 @@ fun AuthScreen(onLoginSuccess: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.padding(24.dp)
         ) {
-            Text(text = if (isLoggedIn) "Welcome, ${auth.currentUser?.email}" else "Login", fontSize = 24.sp)
+            Text(text = if (isLoggedIn) "Welcome, ${auth.currentUser?.email}" else "Welcome to Range Aid", fontSize = 32.sp, color = Color.White, fontWeight = FontWeight.Bold)
 
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
                 label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors= OutlinedTextFieldDefaults.colors(
+                    unfocusedContainerColor = Color(255, 255, 255),
+                    focusedContainerColor = Color(255, 255, 255)
+
+                )
+
             )
 
             OutlinedTextField(
@@ -72,13 +92,22 @@ fun AuthScreen(onLoginSuccess: () -> Unit) {
                 onValueChange = { password = it },
                 label = { Text("Password") },
                 visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors= OutlinedTextFieldDefaults.colors(
+                    unfocusedContainerColor = Color(255, 255, 255),
+                    focusedContainerColor = Color(255, 255, 255)
+                )
             )
 
             Button(
                 onClick = { loginUser(auth, email, password, onLoginSuccess) },
                 shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth().height(50.dp)
+                modifier = Modifier.fillMaxWidth().height(50.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(255, 99, 71)
+                )
+
+
             ) {
                 Text(text = "Login", fontSize = 18.sp)
             }
@@ -86,9 +115,12 @@ fun AuthScreen(onLoginSuccess: () -> Unit) {
             Button(
                 onClick = { signUpUser(auth, email, password, onLoginSuccess) },
                 shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth().height(50.dp)
+                modifier = Modifier.fillMaxWidth().height(50.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(255, 99, 71)
+                )
             ) {
-                Text(text = "Register", fontSize = 18.sp)
+                Text(text = "Create Account", fontSize = 18.sp)
             }
 
             if (isLoggedIn) {
