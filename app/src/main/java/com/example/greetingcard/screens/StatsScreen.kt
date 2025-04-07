@@ -1,107 +1,167 @@
 package com.example.greetingcard.screens
 
-import android.os.Bundle
 import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.firestore.DocumentReference
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.decodeFromString
+import java.io.File
+import java.util.regex.Pattern
 
-data class GunData(val precision: Double, val accuracy: Double, val timestamp: Any)
+suspend fun readAllSessionData(context: android.content.Context): List<Session> = withContext(Dispatchers.IO) {
+    val filesDir = context.filesDir
+    val files = filesDir.listFiles() ?: emptyArray()
+
+    val pattern = Pattern.compile("data_\\d{4}-\\d{2}-\\d{2}T\\d{2}-\\d{2}-\\d{2}Z\\.json")
+
+    val matchingFiles = files.filter { pattern.matcher(it.name).matches() }
+
+    Log.d("StatsScreen", "Found ${matchingFiles.size} matching files.")
+
+    matchingFiles.forEach { file ->
+        Log.d("StatsScreen", "Matching file: ${file.name}")
+    }
+
+    return@withContext matchingFiles.mapNotNull { file ->
+        try {
+            val jsonString = file.readText()
+            Json.decodeFromString<SessionData>(jsonString).session
+        } catch (e: Exception) {
+            Log.e("StatsScreen", "Error parsing file ${file.name}: ${e.message}")
+            e.printStackTrace()
+            null
+        }
+    }.flatten()
+}
+
+@Serializable
+data class Session(
+    val session_id: String,
+    val timestamp: String,
+    val hits: Int,
+    val misses: Int,
+    val total_shots: Int,
+    val accuracy: Int,
+    val center_to_center: Double
+)
+
+@Serializable
+data class SessionData(
+    val session: List<Session>
+)
 
 @Composable
 fun StatsScreen(navController: NavHostController) {
-    var precision by remember { mutableStateOf(0.0) }
-    var accuracy by remember { mutableStateOf(0.0) }
-    var loading by remember { mutableStateOf(true) }
+    val context = LocalContext.current
+    var sessionDataList by remember { mutableStateOf<List<Session>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val coroutineScope = rememberCoroutineScope()
 
-    val db = FirebaseFirestore.getInstance()
-
-    // Example user UID and gun ID (replace with actual values)
-    val userUid = "user_12345" // Replace with actual user UID
-    val gunId = "gun_1"        // Replace with actual gun ID
-
-    // Firestore reference for the specific gun document
-    val gunRef: DocumentReference = db.collection("users")
-        .document(userUid)
-        .collection("guns")
-        .document(gunId)
-
-    // Listen for updates to the Firestore document in real-time
-    val listener: ListenerRegistration = gunRef.addSnapshotListener { snapshot, e ->
-        if (e != null) {
-            Log.w("StatsScreen", "Listen failed.", e)
-            loading = false
-            return@addSnapshotListener
-        }
-
-        if (snapshot != null && snapshot.exists()) {
-            val gunData = snapshot.toObject(GunData::class.java)
-            if (gunData != null) {
-                precision = gunData.precision
-                accuracy = gunData.accuracy
+    LaunchedEffect(Unit) {
+        coroutineScope.launch(Dispatchers.IO) {
+            try {
+                sessionDataList = readAllSessionData(context)
+            } catch (e: Exception) {
+                errorMessage = "Error loading data: ${e.message}"
+            } finally {
+                isLoading = false
             }
         }
-        loading = false
     }
 
-    // UI for StatsScreen
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Personal Stats",
-            fontSize = 32.sp,
+            text = "My Stats",
             fontWeight = FontWeight.Bold,
+            fontSize = 24.sp,
+            modifier = Modifier.padding(16.dp),
             color = Color.White
         )
-        Spacer(modifier = Modifier.height(20.dp))
 
-        // Show a loading indicator while fetching data
-        if (loading) {
-            CircularProgressIndicator()
+        if (isLoading) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+        } else if (errorMessage != null) {
+            Text(text = errorMessage!!, color = Color.Red)
+        } else if (sessionDataList.isEmpty()) {
+            Text("No Data Available")
         } else {
-            // Display the precision and accuracy values
-            Text(
-                text = "Precision: $precision",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.White
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = "Accuracy: $accuracy",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.White
-            )
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // Go back button
-        Button(onClick = { navController.popBackStack() }) {
-            Text("Go Back")
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(sessionDataList) { session ->
+                    SessionBox(session = session)
+                }
+            }
         }
     }
+}
 
-    // Remove listener when the screen is destroyed
-    DisposableEffect(Unit) {
-        onDispose {
-            listener.remove()
+
+
+@Composable
+fun SessionBox(session: Session) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(Color(0xFFE0E0E0), Color(0xFFF5F5F5)),
+                    startY = 0f,
+                    endY = 100f
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(text = "Session ID: ${session.session_id}", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Text(text = "Timestamp: ${session.timestamp}")
+            Text(text = "Hits: ${session.hits}")
+            Text(text = "Misses: ${session.misses}")
+            Text(text = "Total Shots: ${session.total_shots}")
+            Text(text = "The Accuracy: ${session.accuracy}%")
+            Text(text = "Center to Center: ${session.center_to_center}")
         }
+    }
+}
+
+suspend fun parseSessionData(context: android.content.Context, filePath: File): SessionData? = withContext(Dispatchers.IO) {
+    return@withContext try {
+        if (!filePath.exists()) {
+            Log.e("StatsScreen", "File not found: ${filePath.absolutePath}")
+            return@withContext null
+        }
+        val jsonString = filePath.readText()
+        Json.decodeFromString<SessionData>(jsonString)
+    } catch (e: Exception) {
+        Log.e("StatsScreen", "Error parsing JSON: ${e.message}")
+        e.printStackTrace()
+        null
     }
 }
