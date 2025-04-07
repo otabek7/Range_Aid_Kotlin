@@ -127,7 +127,10 @@ fun RangeAidScreen(navController: NavHostController) {
             Button(
                 onClick = {
                     if (selectedGun != null) {
-                        val pythonCommand = "python3.8 $scriptPath --brand \"${selectedGun?.brand}\" --model \"${selectedGun?.model}\""
+                        val brand = selectedGun?.brand ?: ""
+                        val model = selectedGun?.model ?: ""
+                        // Add single quotes around the double quotes to preserve them for the remote shell
+                        val pythonCommand = "python3.8 $scriptPath --brand '\\\"$brand\\\"' --model '\\\"$model\\\"'"
                         copyPythonCommand(context, pythonCommand)
                     } else {
                         Toast.makeText(context, "Please select a gun first.", Toast.LENGTH_SHORT).show()

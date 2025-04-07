@@ -55,6 +55,8 @@ suspend fun readAllSessionData(context: android.content.Context): List<Session> 
 @Serializable
 data class Session(
     val session_id: String,
+    val brand: String,
+    val model: String,
     val timestamp: String,
     val hits: Int,
     val misses: Int,
@@ -142,6 +144,8 @@ fun SessionBox(session: Session) {
         ) {
             Text(text = "Session ID: ${session.session_id}", fontWeight = FontWeight.Bold, fontSize = 18.sp)
             Text(text = "Timestamp: ${session.timestamp}")
+            Text(text = "Brand: ${session.brand}")
+            Text(text = "Model: ${session.model}")
             Text(text = "Hits: ${session.hits}")
             Text(text = "Misses: ${session.misses}")
             Text(text = "Total Shots: ${session.total_shots}")
