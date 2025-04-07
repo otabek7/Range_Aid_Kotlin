@@ -20,7 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 @Composable
 fun ShareScreen(navController: NavHostController, context: Context) {
     val gradient = Brush.linearGradient(
-        colors = listOf(Color(0xFF800000), Color(0xFF00274D), Color(0xFF4B0082), Color(0xFFFFD700))
+        colors = listOf( Color(0xFF00274D), Color(0xFF4B0082), Color(0xFFFFD700))
     )
 
     Box(
