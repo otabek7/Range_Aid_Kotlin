@@ -91,13 +91,19 @@ fun StatsScreen(navController: NavHostController) {
     }
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(Color(0xFF800000), Color(0xFF3E3E3E), Color(0xFF1B1B1B))
+                )
+            ),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = "My Stats",
             fontWeight = FontWeight.Bold,
-            fontSize = 24.sp,
+            fontSize = 32.sp,
             modifier = Modifier.padding(16.dp),
             color = Color.White
         )
