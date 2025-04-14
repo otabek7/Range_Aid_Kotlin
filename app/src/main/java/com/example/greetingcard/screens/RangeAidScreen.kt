@@ -29,8 +29,13 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import com.example.greetingcard.FirestoreRepository
 import kotlinx.coroutines.launch
 
@@ -65,81 +70,98 @@ fun RangeAidScreen(navController: NavHostController) {
         )
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+    val gradient = Brush.verticalGradient(
+        colors = listOf(Color(0xFF800000), Color(0xFF3E3E3E), Color(0xFF1B1B1B))
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(gradient)
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
     ) {
-        if (isLoading) {
-            CircularProgressIndicator()
-        } else if (errorMessage != null) {
-            Text(text = "Error: $errorMessage")
-        } else {
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded },
-                modifier = Modifier.width(dropdownWidth) // Apply the desired width
-            ) {
-                TextField(
-                    value = selectedGun?.let { "${it.brand} ${it.model}" } ?: "Select a Gun",
-                    onValueChange = { /* Do nothing, it's a dropdown */ },
-                    readOnly = true,
-                    label = { Text("Select Gun") },
-                    trailingIcon = {
-                        Icon(Icons.Filled.ArrowDropDown, contentDescription = "Dropdown")
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .onGloballyPositioned { coordinates ->
-                            textFieldSize = coordinates.size
-                        }
-                        .menuAnchor()
-                )
-                DropdownMenu(
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator()
+            } else if (errorMessage != null) {
+                Text(text = "Error: $errorMessage")
+            } else {
+                ExposedDropdownMenuBox(
                     expanded = expanded,
-                    onDismissRequest = { expanded = false },
-                    modifier = Modifier.width(with(LocalDensity.current) { textFieldSize.width.toDp() })
+                    onExpandedChange = { expanded = !expanded },
+                    modifier = Modifier.width(dropdownWidth) // Apply the desired width
                 ) {
-                    gunInventory.forEach { gun ->
-                        DropdownMenuItem(
-                            text = { Text("${gun.brand} ${gun.model}") },
-                            onClick = {
-                                selectedGun = gun
-                                expanded = false
+                    TextField(
+                        value = selectedGun?.let { "${it.brand} ${it.model}" } ?: "Select a Gun",
+                        onValueChange = { /* Do nothing, it's a dropdown */ },
+                        readOnly = true,
+                        label = { Text("Select Gun") },
+                        trailingIcon = {
+                            Icon(Icons.Filled.ArrowDropDown, contentDescription = "Dropdown")
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .onGloballyPositioned { coordinates ->
+                                textFieldSize = coordinates.size
                             }
-                        )
+                            .menuAnchor()
+                    )
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.width(with(LocalDensity.current) { textFieldSize.width.toDp() })
+                    ) {
+                        gunInventory.forEach { gun ->
+                            DropdownMenuItem(
+                                text = { Text("${gun.brand} ${gun.model}") },
+                                onClick = {
+                                    selectedGun = gun
+                                    expanded = false
+                                }
+                            )
+                        }
                     }
                 }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Button(
-                onClick = {
-                    runSSHCommand(context, "ssh mitchell@10.42.0.1")
-                },
-                enabled = selectedGun != null,
-                modifier = Modifier.width(dropdownWidth) // Apply the same width to the button for consistency
-            ) {
-                Text("Run SSH Command")
-            }
-            Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = {
+                        runSSHCommand(context, "ssh mitchell@10.42.0.1")
+                    },
+                    enabled = selectedGun != null,
+                    modifier = Modifier.width(dropdownWidth) // Apply the same width to the button for consistency
+                ) {
+                    Text("Run SSH Command")
+                }
+                Spacer(modifier = Modifier.height(8.dp))
 
-            Button(
-                onClick = {
-                    if (selectedGun != null) {
-                        val brand = selectedGun?.brand ?: ""
-                        val model = selectedGun?.model ?: ""
-                        // Add single quotes around the double quotes to preserve them for the remote shell
-                        val pythonCommand = "python3.8 $scriptPath --brand '\\\"$brand\\\"' --model '\\\"$model\\\"'"
-                        copyPythonCommand(context, pythonCommand)
-                    } else {
-                        Toast.makeText(context, "Please select a gun first.", Toast.LENGTH_SHORT).show()
-                    }
-                },
-                enabled = selectedGun != null,
-                modifier = Modifier.width(dropdownWidth) // Apply the same width to the button
-            ) {
-                Text("Copy Python Command with Gun")
+                Button(
+                    onClick = {
+                        if (selectedGun != null) {
+                            val brand = selectedGun?.brand ?: ""
+                            val model = selectedGun?.model ?: ""
+                            // Add single quotes around the double quotes to preserve them for the remote shell
+                            val pythonCommand =
+                                "python3.8 $scriptPath --brand '\\\"$brand\\\"' --model '\\\"$model\\\"'"
+                            copyPythonCommand(context, pythonCommand)
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "Please select a gun first.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    },
+                    enabled = selectedGun != null,
+                    modifier = Modifier.width(dropdownWidth) // Apply the same width to the button
+                ) {
+                    Text("Copy Python Command with Gun")
+                }
             }
         }
     }
@@ -167,10 +189,15 @@ private fun copyPythonCommand(context: Context, command: String) {
         } else {
             context.startService(serviceIntent)
         }
-        Toast.makeText(context, "Command copied. Paste in Termux and press Enter.", Toast.LENGTH_LONG).show()
+        Toast.makeText(
+            context,
+            "Command copied. Paste in Termux and press Enter.",
+            Toast.LENGTH_LONG
+        ).show()
 
     } catch (e: Exception) {
-        Toast.makeText(context, "Error: ${e.javaClass.simpleName}: ${e.message}", Toast.LENGTH_LONG).show()
+        Toast.makeText(context, "Error: ${e.javaClass.simpleName}: ${e.message}", Toast.LENGTH_LONG)
+            .show()
     }
 }
 
@@ -194,6 +221,7 @@ private fun runSSHCommand(context: Context, command: String) {
             context.startService(serviceIntent)
         }
     } catch (e: Exception) {
-        Toast.makeText(context, "Error: ${e.javaClass.simpleName}: ${e.message}", Toast.LENGTH_LONG).show()
+        Toast.makeText(context, "Error: ${e.javaClass.simpleName}: ${e.message}", Toast.LENGTH_LONG)
+            .show()
     }
 }

@@ -109,13 +109,14 @@ fun CustomTextField(label: String, value: String, onValueChange: (String) -> Uni
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(label, color = Color.White) },
-        textStyle = LocalTextStyle.current.copy(color = Color.White),
+        label = { Text(label, color = Color.Gray) },
+        textStyle = LocalTextStyle.current.copy(color = Color.Gray),
         modifier = Modifier.fillMaxWidth(),
         colors = TextFieldDefaults.outlinedTextFieldColors(
             focusedBorderColor = Color.White,
             unfocusedBorderColor = Color.Gray,
-            cursorColor = Color.White
+            containerColor = Color.White,
+            cursorColor = Color.Black
         )
     )
 }
