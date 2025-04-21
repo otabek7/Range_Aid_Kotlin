@@ -34,6 +34,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 import java.util.regex.Pattern
 
 @Composable
@@ -49,7 +52,9 @@ fun StatsScreen(navController: NavHostController) {
     ) { isGranted ->
         if (isGranted) {
             loadSessionData(context, coroutineScope, onLoaded = {
-                sessionDataList = it
+                sessionDataList = it.sortedByDescending { session ->
+                    parseTimestamp(session.timestamp)
+                }
                 isLoading = false
             }, onError = {
                 errorMessage = it
@@ -154,7 +159,10 @@ fun loadSessionData(
 suspend fun readAllSessionData(context: Context): List<Session> = withContext(Dispatchers.IO) {
     val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
     Log.d("StatsScreen", "Looking in directory: ${downloadDir.absolutePath}")
-    Log.d("StatsScreen", "Directory exists: ${downloadDir.exists()}, readable: ${downloadDir.canRead()}")
+    Log.d(
+        "StatsScreen",
+        "Directory exists: ${downloadDir.exists()}, readable: ${downloadDir.canRead()}"
+    )
 
     val files = downloadDir.listFiles() ?: emptyArray()
     if (files.isEmpty()) {
@@ -185,8 +193,12 @@ fun SessionBox(session: Session) {
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("Session ID: ${session.session_id}", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            Text("Timestamp: ${session.timestamp}")
+            Text(
+                "Timestamp: ${formatIsoTimestamp(session.timestamp)}",
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
+            Text("Session ID: ${session.session_id}")
             Text("Brand: ${session.brand}")
             Text("Model: ${session.model}")
             Text("Hits: ${session.hits}")
@@ -215,3 +227,25 @@ data class Session(
     val accuracy: Int,
     val center_to_center: Int
 )
+
+fun formatIsoTimestamp(iso: String): String {
+    return try {
+        val parser = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
+        parser.timeZone = TimeZone.getTimeZone("UTC") // ensure correct parsing from Zulu time
+
+        val formatter = java.text.SimpleDateFormat("MMMM d, yyyy 'at' h:mm a", Locale.getDefault())
+        val date = parser.parse(iso)
+        formatter.format(date!!)
+    } catch (e: Exception) {
+        iso // fallback to raw if parsing fails
+    }
+}
+fun parseTimestamp(iso: String): Date? {
+    return try {
+        val parser = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
+        parser.timeZone = TimeZone.getTimeZone("UTC")
+        parser.parse(iso)
+    } catch (e: Exception) {
+        null
+    }
+}

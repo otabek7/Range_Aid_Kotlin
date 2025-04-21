@@ -72,7 +72,7 @@ fun HomeScreen(navController: NavHostController) {
             GunButton(R.drawable.rangeaid_icon, "Start Range Aid") { navController.navigate("range") }
             GunButton(R.drawable.addinventory_icon, "Add to Inventory") { navController.navigate("add") }
             GunButton(R.drawable.stats_icon, "View Personal Stats") { navController.navigate("stats") }
-            GunButton(R.drawable.stats_icon, "View Gallery") { navController.navigate("gallery") }
+            GunButton(R.drawable.gallery_icon, "View Gallery") { navController.navigate("gallery") }
 
             // Logout Button
             Button(
