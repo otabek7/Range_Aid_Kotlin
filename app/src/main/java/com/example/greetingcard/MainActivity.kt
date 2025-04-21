@@ -44,6 +44,8 @@ fun AppNavigation() {
         composable("range") { com.example.greetingcard.screens.RangeAidScreen(navController) }
         composable("add") { com.example.greetingcard.screens.AddInventoryScreen(navController) }
         composable("stats") { com.example.greetingcard.screens.StatsScreen(navController) }
+        composable("gallery") {com.example.greetingcard.screens.GalleryScreen(navController) }
+
     }
 }
 
@@ -70,6 +72,7 @@ fun HomeScreen(navController: NavHostController) {
             GunButton(R.drawable.rangeaid_icon, "Start Range Aid") { navController.navigate("range") }
             GunButton(R.drawable.addinventory_icon, "Add to Inventory") { navController.navigate("add") }
             GunButton(R.drawable.stats_icon, "View Personal Stats") { navController.navigate("stats") }
+            GunButton(R.drawable.stats_icon, "View Gallery") { navController.navigate("gallery") }
 
             // Logout Button
             Button(
